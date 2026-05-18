@@ -113,10 +113,19 @@
       border-radius: 8px;
       font-weight: 700;
       font-size: 15px;
+      border: none;
+      cursor: pointer;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     .zoom-btn:hover {
       transform: scale(1.02);
+    }
+
+    .zoom-btn:disabled {
+      opacity: 0.65;
+      cursor: wait;
+      transform: none;
     }
 
     .empty, .error {
@@ -149,7 +158,7 @@
   </div>
 
   <script>
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAC8NnIBgdWBTLInGmvSzXIeiA9G2ZRRwUik-rCPgpMRDI2N6voxgK_jjqANbfEPb1/exec';
+    const GAS_URL = 'PEGA_AQUI_TU_URL_GAS_EXEC';
 
     const PAGE_ICON = 'https://campusvirtual.preucvonline.cl/theme/image.php/edumy/page/1760185087/icon';
 
@@ -252,16 +261,6 @@
     function renderCard(c, actual) {
       const estado = calcularEstado(c, actual);
 
-      let goUrl = GAS_URL
-        + '?action=go'
-        + '&asignatura=' + encodeURIComponent(asignatura)
-        + '&username=' + encodeURIComponent(username)
-        + '&class_id=' + encodeURIComponent(c.class_id);
-
-      if (debugNow) {
-        goUrl += '&debug_now=' + encodeURIComponent(debugNow);
-      }
-
       return `
         <div class="card ${estado.color}">
           <div class="resource-title">
@@ -284,15 +283,75 @@
             <div class="bar ${estado.color}" style="width:${estado.porcentaje}%;"></div>
           </div>
 
-          <a class="zoom-btn" href="${goUrl}" target="_top">
+          <button class="zoom-btn" type="button" onclick="registrarYEntrar('${escapeJs(c.class_id)}', this)">
             Ingresar a Zoom
-          </a>
+          </button>
 
           <div class="small" style="margin-top:10px;">
             Usuario Moodle: ${escapeHtml(username || 'no recibido')}
           </div>
         </div>
       `;
+    }
+
+    function registrarYEntrar(classId, boton) {
+      if (!classId) {
+        alert('No se recibió el identificador de clase.');
+        return;
+      }
+
+      const textoOriginal = boton ? boton.textContent : '';
+
+      if (boton) {
+        boton.disabled = true;
+        boton.textContent = 'Registrando ingreso...';
+      }
+
+      const callbackName = '__trackCallback_' + Date.now();
+
+      window[callbackName] = function(data) {
+        try {
+          if (!data || data.estado !== 'OK' || !data.zoom_url) {
+            alert(data && data.mensaje ? data.mensaje : 'No fue posible registrar el ingreso.');
+            if (boton) {
+              boton.disabled = false;
+              boton.textContent = textoOriginal || 'Ingresar a Zoom';
+            }
+            return;
+          }
+
+          window.top.location.href = data.zoom_url;
+
+        } finally {
+          delete window[callbackName];
+        }
+      };
+
+      const script = document.createElement('script');
+
+      let src = GAS_URL
+        + '?action=track'
+        + '&asignatura=' + encodeURIComponent(asignatura)
+        + '&username=' + encodeURIComponent(username)
+        + '&class_id=' + encodeURIComponent(classId)
+        + '&callback=' + encodeURIComponent(callbackName);
+
+      if (debugNow) {
+        src += '&debug_now=' + encodeURIComponent(debugNow);
+      }
+
+      script.src = src;
+
+      script.onerror = function() {
+        alert('No se pudo registrar el ingreso a la clase.');
+
+        if (boton) {
+          boton.disabled = false;
+          boton.textContent = textoOriginal || 'Ingresar a Zoom';
+        }
+      };
+
+      document.body.appendChild(script);
     }
 
     function calcularEstado(c, actual) {
@@ -362,6 +421,15 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function escapeJs(text) {
+      return String(text || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
     }
 
     cargarClases();
