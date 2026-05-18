@@ -3,18 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <title>Clases disponibles</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #dfe7ef;
+      --text: #3f4f63;
+      --muted: #748396;
+      --title: #506176;
+
+      --blue: #0b57d0;
+      --blue-dark: #003c72;
+      --green: #198754;
+      --yellow: #b58100;
+      --red: #c62828;
+
+      --track: #e6ebf2;
+      --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      padding: 18px;
+      padding: 14px;
       font-family: Arial, Helvetica, sans-serif;
-      background: #f7f9fb;
-      color: #3f4f63;
+      background: var(--bg);
+      color: var(--text);
     }
 
     .wrap {
-      max-width: 980px;
+      max-width: 1120px;
       margin: 0 auto;
     }
 
@@ -23,99 +47,232 @@
       align-items: center;
       gap: 10px;
       font-size: 18px;
-      font-weight: 600;
-      color: #506176;
-      margin-bottom: 16px;
+      font-weight: 700;
+      color: var(--title);
+      margin-bottom: 12px;
     }
 
     .titulo img {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
+      flex: 0 0 auto;
+    }
+
+    .subinfo {
+      margin: -4px 0 12px 32px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
     }
 
     .card {
-      background: #ffffff;
-      border: 1px solid #dfe7ef;
-      border-left: 7px solid #003c72;
-      border-radius: 10px;
-      padding: 16px 18px;
-      margin-bottom: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --accent: var(--blue-dark);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 12px 15px 11px 15px;
+      margin-bottom: 11px;
+      box-shadow: var(--shadow);
     }
 
-    .card.azul { border-left-color: #003c72; }
-    .card.verde { border-left-color: #198754; }
-    .card.amarillo { border-left-color: #b58100; }
-    .card.rojo { border-left-color: #c62828; }
+    .card.recomendada {
+      box-shadow: 0 3px 11px rgba(0,0,0,0.09);
+    }
+
+    .card-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 9px;
+    }
 
     .resource-title {
       display: flex;
       align-items: center;
-      gap: 9px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #53677d;
-      margin-bottom: 12px;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #4f647a;
+      line-height: 1.25;
+      min-width: 0;
     }
 
     .resource-title img {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
     }
 
-    .meta {
-      line-height: 1.55;
-      font-size: 15px;
-      margin-bottom: 12px;
+    .resource-title span {
+      word-break: break-word;
+    }
+
+    .badge-group {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .badge {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
       padding: 5px 10px;
       border-radius: 999px;
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
       color: #ffffff;
-      margin-bottom: 12px;
+      background: var(--accent);
+      min-height: 26px;
     }
 
-    .badge.azul { background: #003c72; }
-    .badge.verde { background: #198754; }
-    .badge.amarillo { background: #b58100; }
-    .badge.rojo { background: #c62828; }
-
-    .progress {
-      height: 10px;
-      background: #e7edf3;
+    .badge-soft {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      padding: 5px 10px;
       border-radius: 999px;
-      overflow: hidden;
-      margin: 10px 0 12px 0;
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 12%, #ffffff);
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, #ffffff);
+      min-height: 26px;
     }
 
-    .bar {
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(190px, 1fr));
+      gap: 6px 16px;
+      margin-bottom: 9px;
+    }
+
+    .meta-item {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      font-size: 13.5px;
+      line-height: 1.3;
+    }
+
+    .meta-item .k {
+      font-weight: 700;
+      color: #33465b;
+    }
+
+    .meta-item .v {
+      color: #4a5d72;
+    }
+
+    .progress-block {
+      margin-top: 3px;
+      margin-bottom: 9px;
+    }
+
+    .progress-line-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 5px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+    }
+
+    .progress-line-top .left {
+      color: #3c5065;
+      font-weight: 700;
+    }
+
+    .progress-line-top .right {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .yt-progress {
+      position: relative;
+      width: 100%;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--track);
+      overflow: visible;
+    }
+
+    .yt-progress-fill {
+      position: relative;
       height: 100%;
-      width: 0%;
-      transition: width 0.4s ease;
+      border-radius: 999px;
+      background: var(--accent);
+      overflow: visible;
+      min-width: 0;
+      transition: width 0.35s linear, background-color 0.35s linear;
     }
 
-    .bar.azul { background: #003c72; }
-    .bar.verde { background: #198754; }
-    .bar.amarillo { background: #b58100; }
-    .bar.rojo { background: #c62828; }
+    .yt-progress-fill::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: repeating-linear-gradient(
+        -45deg,
+        rgba(255,255,255,0.20) 0px,
+        rgba(255,255,255,0.20) 7px,
+        rgba(255,255,255,0.00) 7px,
+        rgba(255,255,255,0.00) 14px
+      );
+      animation: stripesMove 1.2s linear infinite;
+      pointer-events: none;
+    }
+
+    .yt-progress-dot {
+      position: absolute;
+      right: -6px;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+    }
+
+    @keyframes stripesMove {
+      from { background-position: 0 0; }
+      to { background-position: 24px 0; }
+    }
+
+    .bottom-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 7px;
+    }
 
     .zoom-btn {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 11px 20px;
-      background: #003c72;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 15px;
+      background: var(--blue-dark);
       color: #ffffff;
       text-decoration: none;
       border-radius: 8px;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 13.5px;
       border: none;
       cursor: pointer;
       font-family: Arial, Helvetica, sans-serif;
+      min-width: 135px;
+      transition: transform 0.12s ease, opacity 0.12s ease;
     }
 
     .zoom-btn:hover {
@@ -123,14 +280,20 @@
     }
 
     .zoom-btn:disabled {
-      opacity: 0.65;
+      opacity: 0.70;
       cursor: wait;
       transform: none;
     }
 
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: right;
+    }
+
     .empty, .error {
       background: #ffffff;
-      border: 1px solid #dfe7ef;
+      border: 1px solid var(--line);
       border-radius: 10px;
       padding: 22px;
       text-align: center;
@@ -138,9 +301,41 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
-    .small {
-      font-size: 13px;
-      color: #7a8795;
+    @media (max-width: 900px) {
+      .meta-grid {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 12px;
+      }
+
+      .card-head {
+        grid-template-columns: 1fr;
+      }
+
+      .badge-group {
+        justify-content: flex-start;
+      }
+
+      .meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .bottom-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .small {
+        text-align: left;
+      }
+
+      .zoom-btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -150,6 +345,10 @@
     <div class="titulo">
       <img src="https://campusvirtual.preucvonline.cl/theme/image.php/edumy/page/1760185087/icon" alt="">
       <span id="tituloPrincipal">Clases disponibles</span>
+    </div>
+
+    <div class="subinfo" id="subinfo">
+      Se muestran primero las clases con menor avance para orientar el ingreso a la clase donde se pierde menos contenido.
     </div>
 
     <div id="contenedor">
@@ -170,6 +369,7 @@
     let serverNowMs = null;
     let loadedAtMs = Date.now();
     let clasesGlobal = [];
+    let loadingClassId = null;
 
     const nombresAsignatura = {
       LEN: 'Comprensión Lectora',
@@ -209,7 +409,7 @@
           clasesGlobal = data.clases || [];
 
           render();
-          setInterval(render, 30000);
+          setInterval(render, 1000);
 
         } finally {
           delete window[callbackName];
@@ -240,9 +440,20 @@
       const contenedor = document.getElementById('contenedor');
       const actual = nowMs();
 
-      const visibles = clasesGlobal.filter(c => {
-        return actual >= Number(c.visible_desde_ms) && actual <= Number(c.visible_hasta_ms);
-      });
+      const visibles = clasesGlobal
+        .filter(c => {
+          return actual >= Number(c.visible_desde_ms) && actual <= Number(c.visible_hasta_ms);
+        })
+        .map(c => {
+          const ui = calcularEstadoVisual(c, actual);
+          return { ...c, _ui: ui };
+        })
+        .sort((a, b) => {
+          if (a._ui.orden !== b._ui.orden) {
+            return a._ui.orden - b._ui.orden;
+          }
+          return Number(a.inicio_ms) - Number(b.inicio_ms);
+        });
 
       if (visibles.length === 0) {
         contenedor.innerHTML = `
@@ -255,40 +466,85 @@
         return;
       }
 
-      contenedor.innerHTML = visibles.map(c => renderCard(c, actual)).join('');
+      contenedor.innerHTML = visibles.map((c, index) => renderCard(c, index)).join('');
     }
 
-    function renderCard(c, actual) {
-      const estado = calcularEstado(c, actual);
+    function renderCard(c, index) {
+      const ui = c._ui;
+      const isLoading = loadingClassId === c.class_id;
+      const esRecomendada = index === 0;
 
       return `
-        <div class="card ${estado.color}">
-          <div class="resource-title">
-            <img src="${PAGE_ICON}" alt="">
-            <span>Ingresa a la clase del curso ${escapeHtml(c.sigla_curso)}</span>
+        <div class="card ${esRecomendada ? 'recomendada' : ''}" style="--accent:${ui.colorHex};">
+          <div class="card-head">
+            <div class="resource-title">
+              <img src="${PAGE_ICON}" alt="">
+              <span>Ingresa a la clase del curso ${escapeHtml(c.sigla_curso)}</span>
+            </div>
+
+            <div class="badge-group">
+              ${esRecomendada ? '<span class="badge-soft">Sugerida</span>' : ''}
+              <span class="badge">${ui.texto}</span>
+            </div>
           </div>
 
-          <span class="badge ${estado.color}">${estado.texto}</span>
+          <div class="meta-grid">
+            <div class="meta-item">
+              <span class="k">Asignatura:</span>
+              <span class="v">${escapeHtml(c.asignatura)}</span>
+            </div>
 
-          <div class="meta">
-            <strong>Asignatura:</strong> ${escapeHtml(c.asignatura)}<br>
-            <strong>Profesor/a:</strong> ${escapeHtml(c.profesor || 'No informado')}<br>
-            <strong>Día:</strong> ${escapeHtml(c.dia)}<br>
-            <strong>Horario:</strong> ${escapeHtml(c.hora_inicio)} a ${escapeHtml(c.hora_fin)}<br>
-            <strong>Tiempo transcurrido:</strong> ${estado.transcurridoTexto}<br>
-            <strong>Tiempo restante:</strong> ${estado.restanteTexto}
+            <div class="meta-item">
+              <span class="k">Profesor/a:</span>
+              <span class="v">${escapeHtml(c.profesor || 'No informado')}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="k">Día:</span>
+              <span class="v">${escapeHtml(c.dia)}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="k">Horario:</span>
+              <span class="v">${escapeHtml(c.hora_inicio)} a ${escapeHtml(c.hora_fin)}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="k">Tiempo transcurrido:</span>
+              <span class="v">${ui.transcurridoTexto}</span>
+            </div>
+
+            <div class="meta-item">
+              <span class="k">Tiempo restante:</span>
+              <span class="v">${ui.restanteTexto}</span>
+            </div>
           </div>
 
-          <div class="progress">
-            <div class="bar ${estado.color}" style="width:${estado.porcentaje}%;"></div>
+          <div class="progress-block">
+            <div class="progress-line-top">
+              <div class="left">Avance de la clase</div>
+              <div class="right">${ui.porcentaje}%</div>
+            </div>
+
+            <div class="yt-progress" aria-label="Avance de la clase">
+              <div class="yt-progress-fill" style="width:${ui.porcentaje}%;">
+                ${ui.porcentaje > 0 ? '<span class="yt-progress-dot"></span>' : ''}
+              </div>
+            </div>
           </div>
 
-          <button class="zoom-btn" type="button" onclick="registrarYEntrar('${escapeJs(c.class_id)}', this)">
-            Ingresar a Zoom
-          </button>
+          <div class="bottom-row">
+            <button
+              class="zoom-btn"
+              type="button"
+              onclick="registrarYEntrar('${escapeJs(c.class_id)}', this)"
+              ${isLoading ? 'disabled' : ''}>
+              ${isLoading ? 'Registrando ingreso...' : 'Ingresar a Zoom'}
+            </button>
 
-          <div class="small" style="margin-top:10px;">
-            Usuario Moodle: ${escapeHtml(username || 'no recibido')}
+            <div class="small">
+              Usuario Moodle: ${escapeHtml(username || 'no recibido')}
+            </div>
           </div>
         </div>
       `;
@@ -300,27 +556,59 @@
         return;
       }
 
-      const textoOriginal = boton ? boton.textContent : '';
+      loadingClassId = classId;
+      render();
 
-      if (boton) {
-        boton.disabled = true;
-        boton.textContent = 'Registrando ingreso...';
+      /*
+       * Abrimos una pestaña nueva inmediatamente después del clic.
+       * Esto evita que el navegador bloquee la apertura por considerarla popup.
+       * Luego, cuando GAS responda, cargamos Zoom en esta misma pestaña.
+       */
+      const zoomTab = window.open('', '_blank');
+
+      if (!zoomTab) {
+        alert('El navegador bloqueó la apertura de la pestaña de Zoom. Permite ventanas emergentes para este sitio.');
+        loadingClassId = null;
+        render();
+        return;
       }
+
+      zoomTab.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+          <meta charset="UTF-8">
+          <title>Preparando ingreso a Zoom</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; text-align:center; padding:40px;">
+          <h2>Preparando ingreso a Zoom...</h2>
+          <p>Estamos registrando tu ingreso a la clase.</p>
+          <p>Esta ventana se actualizará automáticamente.</p>
+        </body>
+        </html>
+      `);
 
       const callbackName = '__trackCallback_' + Date.now();
 
       window[callbackName] = function(data) {
         try {
           if (!data || data.estado !== 'OK' || !data.zoom_url) {
-            alert(data && data.mensaje ? data.mensaje : 'No fue posible registrar el ingreso.');
-            if (boton) {
-              boton.disabled = false;
-              boton.textContent = textoOriginal || 'Ingresar a Zoom';
-            }
+            zoomTab.document.body.innerHTML = `
+              <div style="font-family: Arial, sans-serif; text-align:center; padding:40px;">
+                <h2>No fue posible ingresar a la clase</h2>
+                <p>${escapeHtml(data && data.mensaje ? data.mensaje : 'No fue posible registrar el ingreso.')}</p>
+              </div>
+            `;
+
+            loadingClassId = null;
+            render();
             return;
           }
 
-          window.top.location.href = data.zoom_url;
+          zoomTab.location.href = data.zoom_url;
+
+          loadingClassId = null;
+          render();
 
         } finally {
           delete window[callbackName];
@@ -343,65 +631,125 @@
       script.src = src;
 
       script.onerror = function() {
-        alert('No se pudo registrar el ingreso a la clase.');
+        zoomTab.document.body.innerHTML = `
+          <div style="font-family: Arial, sans-serif; text-align:center; padding:40px;">
+            <h2>No fue posible registrar el ingreso</h2>
+            <p>No se pudo conectar con el servicio de clases.</p>
+          </div>
+        `;
 
-        if (boton) {
-          boton.disabled = false;
-          boton.textContent = textoOriginal || 'Ingresar a Zoom';
-        }
+        loadingClassId = null;
+        render();
       };
 
       document.body.appendChild(script);
     }
 
-    function calcularEstado(c, actual) {
+    function calcularEstadoVisual(c, actual) {
       const inicio = Number(c.inicio_ms);
       const fin = Number(c.fin_ms);
       const total = fin - inicio;
 
       if (actual < inicio) {
-        const faltaMin = Math.ceil((inicio - actual) / 60000);
+        const faltaMs = inicio - actual;
 
         return {
           texto: 'Comienza pronto',
-          color: 'azul',
+          colorHex: '#003c72',
           porcentaje: 0,
-          transcurridoTexto: '0 min',
-          restanteTexto: 'comienza en ' + faltaMin + ' min'
+          transcurridoTexto: '0 s',
+          restanteTexto: 'comienza en ' + formatDuration(faltaMs),
+          orden: 0
         };
       }
 
-      const transcurridoMin = Math.max(0, Math.floor((actual - inicio) / 60000));
-      const restanteMin = Math.max(0, Math.ceil((fin - actual) / 60000));
-      const porcentaje = Math.max(0, Math.min(100, Math.round(((actual - inicio) / total) * 100)));
+      const transcurridoMs = Math.max(0, actual - inicio);
+      const restanteMs = Math.max(0, fin - actual);
+      const porcentajeExacto = Math.max(0, Math.min(100, (transcurridoMs / total) * 100));
+      const porcentaje = Math.round(porcentajeExacto);
 
-      if (restanteMin <= 10 || porcentaje >= 70) {
-        return {
-          texto: 'Clase próxima a finalizar',
-          color: 'rojo',
-          porcentaje,
-          transcurridoTexto: transcurridoMin + ' min',
-          restanteTexto: restanteMin + ' min'
-        };
+      return {
+        texto: obtenerTextoEstado(porcentajeExacto, restanteMs),
+        colorHex: colorProgresivo(porcentajeExacto),
+        porcentaje,
+        transcurridoTexto: formatDuration(transcurridoMs),
+        restanteTexto: formatDuration(restanteMs),
+        orden: porcentajeExacto
+      };
+    }
+
+    function obtenerTextoEstado(porcentaje, restanteMs) {
+      if (restanteMs <= 10 * 60 * 1000 || porcentaje >= 70) {
+        return 'Clase próxima a finalizar';
       }
 
       if (porcentaje <= 25) {
-        return {
-          texto: 'Clase recién iniciada',
-          color: 'verde',
-          porcentaje,
-          transcurridoTexto: transcurridoMin + ' min',
-          restanteTexto: restanteMin + ' min'
-        };
+        return 'Clase recién iniciada';
       }
 
+      return 'Clase en desarrollo';
+    }
+
+    /*
+     * Color progresivo:
+     *
+     * Antes de comenzar:
+     * - Azul institucional.
+     *
+     * Al iniciar:
+     * - Verde.
+     *
+     * Desarrollo:
+     * - Degradación progresiva desde verde hacia amarillo.
+     *
+     * Final:
+     * - Degradación progresiva desde amarillo hacia rojo.
+     */
+    function colorProgresivo(porcentaje) {
+      const p = Math.max(0, Math.min(100, porcentaje));
+
+      const verde = { r: 25, g: 135, b: 84 };     // #198754
+      const amarillo = { r: 181, g: 129, b: 0 };  // #b58100
+      const rojo = { r: 198, g: 40, b: 40 };      // #c62828
+
+      if (p <= 50) {
+        return rgbToHex(interpolarColor(verde, amarillo, p / 50));
+      }
+
+      return rgbToHex(interpolarColor(amarillo, rojo, (p - 50) / 50));
+    }
+
+    function interpolarColor(a, b, t) {
+      const k = Math.max(0, Math.min(1, t));
+
       return {
-        texto: 'Clase en desarrollo',
-        color: 'amarillo',
-        porcentaje,
-        transcurridoTexto: transcurridoMin + ' min',
-        restanteTexto: restanteMin + ' min'
+        r: Math.round(a.r + (b.r - a.r) * k),
+        g: Math.round(a.g + (b.g - a.g) * k),
+        b: Math.round(a.b + (b.b - a.b) * k)
       };
+    }
+
+    function rgbToHex(c) {
+      return '#' + [c.r, c.g, c.b]
+        .map(v => v.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function formatDuration(ms) {
+      const totalSec = Math.max(0, Math.floor(ms / 1000));
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+
+      if (h > 0) {
+        return `${h} h ${m} min ${String(s).padStart(2, '0')} s`;
+      }
+
+      if (m > 0) {
+        return `${m} min ${String(s).padStart(2, '0')} s`;
+      }
+
+      return `${s} s`;
     }
 
     function mostrarError(msg) {
