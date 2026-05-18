@@ -141,8 +141,8 @@
       font-weight: 700;
       font-size: 12px;
       color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 12%, #ffffff);
-      border: 1px solid color-mix(in srgb, var(--accent) 28%, #ffffff);
+      background: rgba(255,255,255,0.85);
+      border: 1px solid rgba(0,0,0,0.12);
       min-height: 26px;
     }
 
@@ -272,16 +272,24 @@
       cursor: pointer;
       font-family: Arial, Helvetica, sans-serif;
       min-width: 135px;
-      transition: transform 0.12s ease, opacity 0.12s ease;
+      transition: transform 0.12s ease, opacity 0.12s ease, background-color 0.12s ease, filter 0.12s ease;
     }
 
     .zoom-btn:hover {
       transform: scale(1.02);
     }
 
-    .zoom-btn:disabled {
-      opacity: 0.70;
-      cursor: wait;
+    .zoom-btn:disabled,
+    .zoom-btn-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+      filter: grayscale(30%);
+      background: #7a8795;
+    }
+
+    .zoom-btn:disabled:hover,
+    .zoom-btn-disabled:hover {
       transform: none;
     }
 
@@ -472,7 +480,7 @@
     function renderCard(c, index) {
       const ui = c._ui;
       const isLoading = loadingClassId === c.class_id;
-      const esRecomendada = index === 0;
+      const esRecomendada = index === 0 && ui.botonHabilitado && !ui.claseTerminada;
 
       return `
         <div class="card ${esRecomendada ? 'recomendada' : ''}" style="--accent:${ui.colorHex};">
@@ -510,12 +518,12 @@
             </div>
 
             <div class="meta-item">
-              <span class="k">Tiempo transcurrido:</span>
+              <span class="k">${ui.claseTerminada ? 'Duración:' : 'Tiempo transcurrido:'}</span>
               <span class="v">${ui.transcurridoTexto}</span>
             </div>
 
             <div class="meta-item">
-              <span class="k">Tiempo restante:</span>
+              <span class="k">${ui.claseTerminada ? 'Estado:' : 'Tiempo restante:'}</span>
               <span class="v">${ui.restanteTexto}</span>
             </div>
           </div>
@@ -535,11 +543,15 @@
 
           <div class="bottom-row">
             <button
-              class="zoom-btn"
+              class="zoom-btn ${ui.claseTerminada ? 'zoom-btn-disabled' : ''}"
               type="button"
               onclick="registrarYEntrar('${escapeJs(c.class_id)}', this)"
-              ${isLoading ? 'disabled' : ''}>
-              ${isLoading ? 'Registrando ingreso...' : 'Ingresar a Zoom'}
+              ${(isLoading || !ui.botonHabilitado) ? 'disabled' : ''}>
+              ${
+                ui.claseTerminada
+                  ? 'Clase terminada'
+                  : (isLoading ? 'Registrando ingreso...' : 'Ingresar a Zoom')
+              }
             </button>
 
             <div class="small">
@@ -648,6 +660,7 @@
     function calcularEstadoVisual(c, actual) {
       const inicio = Number(c.inicio_ms);
       const fin = Number(c.fin_ms);
+      const visibleHasta = Number(c.visible_hasta_ms);
       const total = fin - inicio;
 
       if (actual < inicio) {
@@ -659,7 +672,31 @@
           porcentaje: 0,
           transcurridoTexto: '0 s',
           restanteTexto: 'comienza en ' + formatDuration(faltaMs),
+          claseTerminada: false,
+          botonHabilitado: true,
           orden: 0
+        };
+      }
+
+      /*
+       * Clase terminada según horario oficial.
+       * Puede seguir visible durante el margen definido por GAS,
+       * pero ya no permite ingresar a Zoom.
+       */
+      if (actual >= fin) {
+        const tiempoParaOcultarseMs = Math.max(0, visibleHasta - actual);
+
+        return {
+          texto: 'Clase terminada',
+          colorHex: '#c62828',
+          porcentaje: 100,
+          transcurridoTexto: formatDuration(total),
+          restanteTexto: tiempoParaOcultarseMs > 0
+            ? 'se ocultará en ' + formatDuration(tiempoParaOcultarseMs)
+            : 'se ocultará en breve',
+          claseTerminada: true,
+          botonHabilitado: false,
+          orden: 999
         };
       }
 
@@ -674,6 +711,8 @@
         porcentaje,
         transcurridoTexto: formatDuration(transcurridoMs),
         restanteTexto: formatDuration(restanteMs),
+        claseTerminada: false,
+        botonHabilitado: true,
         orden: porcentajeExacto
       };
     }
