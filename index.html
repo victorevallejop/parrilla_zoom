@@ -29,12 +29,19 @@
       box-sizing: border-box;
     }
 
+    html,
     body {
       margin: 0;
-      padding: 14px;
+      padding: 0;
+      min-height: 0;
       font-family: Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
+      overflow: hidden;
+    }
+
+    body {
+      padding: 14px;
     }
 
     .wrap {
@@ -349,7 +356,7 @@
 </head>
 
 <body>
-  <div class="wrap">
+  <div class="wrap" id="appWrap">
     <div class="titulo">
       <img src="https://campusvirtual.preucvonline.cl/theme/image.php/edumy/page/1760185087/icon" alt="">
       <span id="tituloPrincipal">Clases disponibles</span>
@@ -380,6 +387,7 @@
     let loadingClassId = null;
     let renderIntervalId = null;
     let resizeTimer = null;
+    let ultimaAlturaEnviada = 0;
 
     const nombresAsignatura = {
       LEN: 'Comprensión Lectora',
@@ -806,31 +814,58 @@
         .replace(/\r/g, '\\r');
     }
 
+    /*
+     * Altura dinámica estable para Moodle.
+     *
+     * Regla central:
+     * - NO medir body ni documentElement como referencia principal.
+     * - NO observar body ni html.
+     * - Medir solo el contenido real de .wrap.
+     *
+     * Esto evita el bucle:
+     * Moodle agranda iframe -> viewport interno crece -> documentElement crece
+     * -> GitHub envía altura mayor -> Moodle vuelve a agrandar.
+     */
     function calcularAlturaDocumento() {
-      const wrap = document.querySelector('.wrap');
+      const wrap = document.getElementById('appWrap') || document.querySelector('.wrap');
 
-      const alturas = [
-        document.body.scrollHeight,
-        document.documentElement.scrollHeight,
-        document.body.offsetHeight,
-        document.documentElement.offsetHeight,
-        document.body.getBoundingClientRect().height,
-        document.documentElement.getBoundingClientRect().height
-      ];
-
-      if (wrap) {
-        const rect = wrap.getBoundingClientRect();
-
-        alturas.push(rect.bottom + 24);
-        alturas.push(wrap.scrollHeight + 36);
-        alturas.push(wrap.offsetHeight + 36);
+      if (!wrap) {
+        return 400;
       }
 
-      return Math.ceil(Math.max.apply(null, alturas.filter(n => Number.isFinite(n))));
+      const rect = wrap.getBoundingClientRect();
+      const bodyStyles = window.getComputedStyle(document.body);
+
+      const paddingTop = parseFloat(bodyStyles.paddingTop) || 0;
+      const paddingBottom = parseFloat(bodyStyles.paddingBottom) || 0;
+
+      /*
+       * Altura real del contenido:
+       * - rect.height mide el alto visual de .wrap.
+       * - padding del body suma el margen interno superior/inferior.
+       * - margen de seguridad evita scroll por sombras/bordes.
+       *
+       * Importante:
+       * No usamos documentElement.scrollHeight porque puede depender
+       * del alto del iframe y provocar crecimiento infinito.
+       */
+      const altura = rect.height + paddingTop + paddingBottom + 18;
+
+      return Math.ceil(Math.max(220, altura));
     }
 
-    function enviarAlturaAlPadre() {
+    function enviarAlturaAlPadre(forzar) {
       const altura = calcularAlturaDocumento();
+
+      /*
+       * Evita enviar ajustes mínimos de 1-2 px que pueden generar
+       * ruido visual o ciclos de microajustes.
+       */
+      if (!forzar && Math.abs(altura - ultimaAlturaEnviada) < 8) {
+        return;
+      }
+
+      ultimaAlturaEnviada = altura;
 
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({
@@ -841,12 +876,11 @@
     }
 
     function enviarAlturaVariasVeces() {
-      enviarAlturaAlPadre();
+      enviarAlturaAlPadre(true);
 
-      setTimeout(enviarAlturaAlPadre, 80);
-      setTimeout(enviarAlturaAlPadre, 180);
-      setTimeout(enviarAlturaAlPadre, 400);
-      setTimeout(enviarAlturaAlPadre, 900);
+      setTimeout(function() { enviarAlturaAlPadre(false); }, 120);
+      setTimeout(function() { enviarAlturaAlPadre(false); }, 300);
+      setTimeout(function() { enviarAlturaAlPadre(false); }, 700);
     }
 
     function programarEnvioAltura() {
@@ -854,11 +888,11 @@
 
       resizeTimer = setTimeout(function() {
         enviarAlturaVariasVeces();
-      }, 80);
+      }, 100);
     }
 
     function activarObservadoresDeAltura() {
-      const target = document.querySelector('.wrap') || document.body;
+      const target = document.getElementById('appWrap') || document.querySelector('.wrap');
 
       if ('ResizeObserver' in window && target) {
         const resizeObserver = new ResizeObserver(function() {
@@ -866,8 +900,6 @@
         });
 
         resizeObserver.observe(target);
-        resizeObserver.observe(document.body);
-        resizeObserver.observe(document.documentElement);
       }
 
       if ('MutationObserver' in window && target) {
@@ -883,13 +915,17 @@
         });
       }
 
-      window.addEventListener('load', enviarAlturaVariasVeces);
-      window.addEventListener('resize', enviarAlturaVariasVeces);
+      window.addEventListener('load', function() {
+        enviarAlturaVariasVeces();
+      });
+
+      window.addEventListener('resize', function() {
+        enviarAlturaVariasVeces();
+      });
+
       window.addEventListener('orientationchange', function() {
         setTimeout(enviarAlturaVariasVeces, 250);
       });
-
-      setInterval(enviarAlturaAlPadre, 2500);
     }
 
     activarObservadoresDeAltura();
