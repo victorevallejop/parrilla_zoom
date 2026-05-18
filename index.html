@@ -378,6 +378,8 @@
     let loadedAtMs = Date.now();
     let clasesGlobal = [];
     let loadingClassId = null;
+    let renderIntervalId = null;
+    let resizeTimer = null;
 
     const nombresAsignatura = {
       LEN: 'Comprensión Lectora',
@@ -417,7 +419,12 @@
           clasesGlobal = data.clases || [];
 
           render();
-          setInterval(render, 1000);
+
+          if (renderIntervalId) {
+            clearInterval(renderIntervalId);
+          }
+
+          renderIntervalId = setInterval(render, 1000);
 
         } finally {
           delete window[callbackName];
@@ -471,10 +478,13 @@
             Los enlaces se habilitan únicamente cuando una clase está próxima a iniciar o se encuentra en desarrollo.
           </div>
         `;
+
+        programarEnvioAltura();
         return;
       }
 
       contenedor.innerHTML = visibles.map((c, index) => renderCard(c, index)).join('');
+      programarEnvioAltura();
     }
 
     function renderCard(c, index) {
@@ -799,6 +809,8 @@
           ${escapeHtml(msg)}
         </div>
       `;
+
+      programarEnvioAltura();
     }
 
     function escapeHtml(text) {
@@ -818,6 +830,39 @@
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '\\r');
     }
+
+    /*
+     * Altura dinámica para Moodle.
+     *
+     * GitHub calcula su altura real y la envía al documento padre.
+     * Moodle debe escuchar este mensaje y ajustar el alto del iframe.
+     */
+    function enviarAlturaAlPadre() {
+      const altura = Math.max(
+        document.body.scrollHeight,
+        document.documentElement.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.offsetHeight
+      );
+
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'parrilla_zoom_height',
+          height: altura
+        }, '*');
+      }
+    }
+
+    function programarEnvioAltura() {
+      clearTimeout(resizeTimer);
+
+      resizeTimer = setTimeout(function() {
+        enviarAlturaAlPadre();
+      }, 80);
+    }
+
+    window.addEventListener('load', programarEnvioAltura);
+    window.addEventListener('resize', programarEnvioAltura);
 
     cargarClases();
   </script>
