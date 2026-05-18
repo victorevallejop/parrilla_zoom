@@ -581,11 +581,6 @@
       loadingClassId = classId;
       render();
 
-      /*
-       * Abrimos una pestaña nueva inmediatamente después del clic.
-       * Esto evita que el navegador bloquee la apertura por considerarla popup.
-       * Luego, cuando GAS responda, cargamos Zoom en esta misma pestaña.
-       */
       const zoomTab = window.open('', '_blank');
 
       if (!zoomTab) {
@@ -688,11 +683,6 @@
         };
       }
 
-      /*
-       * Clase terminada según horario oficial.
-       * Puede seguir visible durante el margen definido por GAS,
-       * pero ya no permite ingresar a Zoom.
-       */
       if (actual >= fin) {
         const tiempoParaOcultarseMs = Math.max(0, visibleHasta - actual);
 
@@ -739,27 +729,12 @@
       return 'Clase en desarrollo';
     }
 
-    /*
-     * Color progresivo:
-     *
-     * Antes de comenzar:
-     * - Azul institucional.
-     *
-     * Al iniciar:
-     * - Verde.
-     *
-     * Desarrollo:
-     * - Degradación progresiva desde verde hacia amarillo.
-     *
-     * Final:
-     * - Degradación progresiva desde amarillo hacia rojo.
-     */
     function colorProgresivo(porcentaje) {
       const p = Math.max(0, Math.min(100, porcentaje));
 
-      const verde = { r: 25, g: 135, b: 84 };     // #198754
-      const amarillo = { r: 181, g: 129, b: 0 };  // #b58100
-      const rojo = { r: 198, g: 40, b: 40 };      // #c62828
+      const verde = { r: 25, g: 135, b: 84 };
+      const amarillo = { r: 181, g: 129, b: 0 };
+      const rojo = { r: 198, g: 40, b: 40 };
 
       if (p <= 50) {
         return rgbToHex(interpolarColor(verde, amarillo, p / 50));
@@ -831,19 +806,31 @@
         .replace(/\r/g, '\\r');
     }
 
-    /*
-     * Altura dinámica para Moodle.
-     *
-     * GitHub calcula su altura real y la envía al documento padre.
-     * Moodle debe escuchar este mensaje y ajustar el alto del iframe.
-     */
-    function enviarAlturaAlPadre() {
-      const altura = Math.max(
+    function calcularAlturaDocumento() {
+      const wrap = document.querySelector('.wrap');
+
+      const alturas = [
         document.body.scrollHeight,
         document.documentElement.scrollHeight,
         document.body.offsetHeight,
-        document.documentElement.offsetHeight
-      );
+        document.documentElement.offsetHeight,
+        document.body.getBoundingClientRect().height,
+        document.documentElement.getBoundingClientRect().height
+      ];
+
+      if (wrap) {
+        const rect = wrap.getBoundingClientRect();
+
+        alturas.push(rect.bottom + 24);
+        alturas.push(wrap.scrollHeight + 36);
+        alturas.push(wrap.offsetHeight + 36);
+      }
+
+      return Math.ceil(Math.max.apply(null, alturas.filter(n => Number.isFinite(n))));
+    }
+
+    function enviarAlturaAlPadre() {
+      const altura = calcularAlturaDocumento();
 
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({
@@ -853,16 +840,59 @@
       }
     }
 
+    function enviarAlturaVariasVeces() {
+      enviarAlturaAlPadre();
+
+      setTimeout(enviarAlturaAlPadre, 80);
+      setTimeout(enviarAlturaAlPadre, 180);
+      setTimeout(enviarAlturaAlPadre, 400);
+      setTimeout(enviarAlturaAlPadre, 900);
+    }
+
     function programarEnvioAltura() {
       clearTimeout(resizeTimer);
 
       resizeTimer = setTimeout(function() {
-        enviarAlturaAlPadre();
+        enviarAlturaVariasVeces();
       }, 80);
     }
 
-    window.addEventListener('load', programarEnvioAltura);
-    window.addEventListener('resize', programarEnvioAltura);
+    function activarObservadoresDeAltura() {
+      const target = document.querySelector('.wrap') || document.body;
+
+      if ('ResizeObserver' in window && target) {
+        const resizeObserver = new ResizeObserver(function() {
+          programarEnvioAltura();
+        });
+
+        resizeObserver.observe(target);
+        resizeObserver.observe(document.body);
+        resizeObserver.observe(document.documentElement);
+      }
+
+      if ('MutationObserver' in window && target) {
+        const mutationObserver = new MutationObserver(function() {
+          programarEnvioAltura();
+        });
+
+        mutationObserver.observe(target, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          characterData: true
+        });
+      }
+
+      window.addEventListener('load', enviarAlturaVariasVeces);
+      window.addEventListener('resize', enviarAlturaVariasVeces);
+      window.addEventListener('orientationchange', function() {
+        setTimeout(enviarAlturaVariasVeces, 250);
+      });
+
+      setInterval(enviarAlturaAlPadre, 2500);
+    }
+
+    activarObservadoresDeAltura();
 
     cargarClases();
   </script>
