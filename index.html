@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Clases disponibles</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 18px;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f9fb;
+      color: #3f4f63;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .titulo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #506176;
+      margin-bottom: 16px;
+    }
+
+    .titulo img {
+      width: 24px;
+      height: 24px;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid #dfe7ef;
+      border-left: 7px solid #003c72;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .card.azul { border-left-color: #003c72; }
+    .card.verde { border-left-color: #198754; }
+    .card.amarillo { border-left-color: #b58100; }
+    .card.rojo { border-left-color: #c62828; }
+
+    .resource-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #53677d;
+      margin-bottom: 12px;
+    }
+
+    .resource-title img {
+      width: 22px;
+      height: 22px;
+    }
+
+    .meta {
+      line-height: 1.55;
+      font-size: 15px;
+      margin-bottom: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #ffffff;
+      margin-bottom: 12px;
+    }
+
+    .badge.azul { background: #003c72; }
+    .badge.verde { background: #198754; }
+    .badge.amarillo { background: #b58100; }
+    .badge.rojo { background: #c62828; }
+
+    .progress {
+      height: 10px;
+      background: #e7edf3;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 10px 0 12px 0;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .bar.azul { background: #003c72; }
+    .bar.verde { background: #198754; }
+    .bar.amarillo { background: #b58100; }
+    .bar.rojo { background: #c62828; }
+
+    .zoom-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 11px 20px;
+      background: #003c72;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .zoom-btn:hover {
+      transform: scale(1.02);
+    }
+
+    .empty, .error {
+      background: #ffffff;
+      border: 1px solid #dfe7ef;
+      border-radius: 10px;
+      padding: 22px;
+      text-align: center;
+      color: #53677d;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .small {
+      font-size: 13px;
+      color: #7a8795;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="titulo">
+      <img src="https://campusvirtual.preucvonline.cl/theme/image.php/edumy/page/1760185087/icon" alt="">
+      <span id="tituloPrincipal">Clases disponibles</span>
+    </div>
+
+    <div id="contenedor">
+      <div class="empty">Buscando clases disponibles...</div>
+    </div>
+  </div>
+
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwAC8NnIBgdWBTLInGmvSzXIeiA9G2ZRRwUik-rCPgpMRDI2N6voxgK_jjqANbfEPb1/exec';
+
+    const PAGE_ICON = 'https://campusvirtual.preucvonline.cl/theme/image.php/edumy/page/1760185087/icon';
+
+    const params = new URLSearchParams(window.location.search);
+    const asignatura = (params.get('asignatura') || '').trim().toUpperCase();
+    const username = (params.get('username') || '').trim();
+    const debugNow = (params.get('debug_now') || '').trim();
+
+    let serverNowMs = null;
+    let loadedAtMs = Date.now();
+    let clasesGlobal = [];
+
+    const nombresAsignatura = {
+      LEN: 'Comprensión Lectora',
+      MAT: 'Matemáticas',
+      HIS: 'Historia',
+      BIO: 'Biología',
+      FIS: 'Física',
+      QUI: 'Química',
+      MEL: 'Matemáticas Electivo'
+    };
+
+    document.getElementById('tituloPrincipal').textContent =
+      'Clases disponibles de ' + (nombresAsignatura[asignatura] || asignatura || 'la asignatura');
+
+    function nowMs() {
+      if (!serverNowMs) return Date.now();
+      return serverNowMs + (Date.now() - loadedAtMs);
+    }
+
+    function cargarClases() {
+      if (!asignatura) {
+        mostrarError('No se recibió el parámetro de asignatura.');
+        return;
+      }
+
+      const callbackName = '__parrillaCallback_' + Date.now();
+
+      window[callbackName] = function(data) {
+        try {
+          if (!data || data.estado !== 'OK') {
+            mostrarError(data && data.mensaje ? data.mensaje : 'No fue posible cargar clases.');
+            return;
+          }
+
+          serverNowMs = Number(data.server_now_ms);
+          loadedAtMs = Date.now();
+          clasesGlobal = data.clases || [];
+
+          render();
+          setInterval(render, 30000);
+
+        } finally {
+          delete window[callbackName];
+        }
+      };
+
+      const script = document.createElement('script');
+
+      let src = GAS_URL
+        + '?action=list'
+        + '&asignatura=' + encodeURIComponent(asignatura)
+        + '&callback=' + encodeURIComponent(callbackName);
+
+      if (debugNow) {
+        src += '&debug_now=' + encodeURIComponent(debugNow);
+      }
+
+      script.src = src;
+
+      script.onerror = function() {
+        mostrarError('No se pudo conectar con el servicio de clases.');
+      };
+
+      document.body.appendChild(script);
+    }
+
+    function render() {
+      const contenedor = document.getElementById('contenedor');
+      const actual = nowMs();
+
+      const visibles = clasesGlobal.filter(c => {
+        return actual >= Number(c.visible_desde_ms) && actual <= Number(c.visible_hasta_ms);
+      });
+
+      if (visibles.length === 0) {
+        contenedor.innerHTML = `
+          <div class="empty">
+            <strong>No hay clases disponibles para ingresar en este momento.</strong>
+            <br><br>
+            Los enlaces se habilitan únicamente cuando una clase está próxima a iniciar o se encuentra en desarrollo.
+          </div>
+        `;
+        return;
+      }
+
+      contenedor.innerHTML = visibles.map(c => renderCard(c, actual)).join('');
+    }
+
+    function renderCard(c, actual) {
+      const estado = calcularEstado(c, actual);
+
+      let goUrl = GAS_URL
+        + '?action=go'
+        + '&asignatura=' + encodeURIComponent(asignatura)
+        + '&username=' + encodeURIComponent(username)
+        + '&class_id=' + encodeURIComponent(c.class_id);
+
+      if (debugNow) {
+        goUrl += '&debug_now=' + encodeURIComponent(debugNow);
+      }
+
+      return `
+        <div class="card ${estado.color}">
+          <div class="resource-title">
+            <img src="${PAGE_ICON}" alt="">
+            <span>Ingresa a la clase del curso ${escapeHtml(c.sigla_curso)}</span>
+          </div>
+
+          <span class="badge ${estado.color}">${estado.texto}</span>
+
+          <div class="meta">
+            <strong>Asignatura:</strong> ${escapeHtml(c.asignatura)}<br>
+            <strong>Profesor/a:</strong> ${escapeHtml(c.profesor || 'No informado')}<br>
+            <strong>Día:</strong> ${escapeHtml(c.dia)}<br>
+            <strong>Horario:</strong> ${escapeHtml(c.hora_inicio)} a ${escapeHtml(c.hora_fin)}<br>
+            <strong>Tiempo transcurrido:</strong> ${estado.transcurridoTexto}<br>
+            <strong>Tiempo restante:</strong> ${estado.restanteTexto}
+          </div>
+
+          <div class="progress">
+            <div class="bar ${estado.color}" style="width:${estado.porcentaje}%;"></div>
+          </div>
+
+          <a class="zoom-btn" href="${goUrl}" target="_top">
+            Ingresar a Zoom
+          </a>
+
+          <div class="small" style="margin-top:10px;">
+            Usuario Moodle: ${escapeHtml(username || 'no recibido')}
+          </div>
+        </div>
+      `;
+    }
+
+    function calcularEstado(c, actual) {
+      const inicio = Number(c.inicio_ms);
+      const fin = Number(c.fin_ms);
+      const total = fin - inicio;
+
+      if (actual < inicio) {
+        const faltaMin = Math.ceil((inicio - actual) / 60000);
+
+        return {
+          texto: 'Comienza pronto',
+          color: 'azul',
+          porcentaje: 0,
+          transcurridoTexto: '0 min',
+          restanteTexto: 'comienza en ' + faltaMin + ' min'
+        };
+      }
+
+      const transcurridoMin = Math.max(0, Math.floor((actual - inicio) / 60000));
+      const restanteMin = Math.max(0, Math.ceil((fin - actual) / 60000));
+      const porcentaje = Math.max(0, Math.min(100, Math.round(((actual - inicio) / total) * 100)));
+
+      if (restanteMin <= 10 || porcentaje >= 70) {
+        return {
+          texto: 'Clase próxima a finalizar',
+          color: 'rojo',
+          porcentaje,
+          transcurridoTexto: transcurridoMin + ' min',
+          restanteTexto: restanteMin + ' min'
+        };
+      }
+
+      if (porcentaje <= 25) {
+        return {
+          texto: 'Clase recién iniciada',
+          color: 'verde',
+          porcentaje,
+          transcurridoTexto: transcurridoMin + ' min',
+          restanteTexto: restanteMin + ' min'
+        };
+      }
+
+      return {
+        texto: 'Clase en desarrollo',
+        color: 'amarillo',
+        porcentaje,
+        transcurridoTexto: transcurridoMin + ' min',
+        restanteTexto: restanteMin + ' min'
+      };
+    }
+
+    function mostrarError(msg) {
+      document.getElementById('contenedor').innerHTML = `
+        <div class="error">
+          <strong>No fue posible cargar la parrilla.</strong>
+          <br><br>
+          ${escapeHtml(msg)}
+        </div>
+      `;
+    }
+
+    function escapeHtml(text) {
+      return String(text || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    cargarClases();
+  </script>
+</body>
+</html>
